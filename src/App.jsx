@@ -19,6 +19,7 @@ import AddI from "./views/AddI";
 import EditOptionsOverview from "./views/EditOptionsOverview";
 import EditOptionList from "./views/EditOptionList";
 import Logout from "./views/Logout";
+import Gallery from "./views/Gallery";
 
 const VIEW_ROUTES = [
   { path: "/search", title: "Búsqueda", Component: Search },
@@ -122,6 +123,15 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
             element={
               <ProtectedRoute isAuthenticated={isAuthenticated}>
                 <EditOptionList />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/gallery"
+            element={
+              <ProtectedRoute isAuthenticated={isAuthenticated}>
+                <Gallery />
               </ProtectedRoute>
             }
           />
