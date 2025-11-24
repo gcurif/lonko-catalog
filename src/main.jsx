@@ -6,8 +6,11 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
+import { validateEnv } from "./config/env";
 
 const theme = createTheme();
+
+validateEnv();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

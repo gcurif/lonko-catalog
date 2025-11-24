@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AppBar,
   Box,
@@ -20,6 +20,7 @@ import EditOptionsOverview from "./views/EditOptionsOverview";
 import EditOptionList from "./views/EditOptionList";
 import Logout from "./views/Logout";
 import Gallery from "./views/Gallery";
+import env from "./config/env";
 
 const VIEW_ROUTES = [
   { path: "/search", title: "Búsqueda", Component: Search },
@@ -151,6 +152,12 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  useEffect(() => {
+    if (env.apiUrl) {
+      console.info(`Usando API_URL: ${env.apiUrl}`);
+    }
+  }, []);
+
   function handleLogin() {
     setIsAuthenticated(true);
   }
@@ -159,6 +166,7 @@ function App() {
     setIsAuthenticated(false);
   }
 
+  //console.log('env url', process.env.API_URL);
   return (
     <HashRouter>
       <AppShell
