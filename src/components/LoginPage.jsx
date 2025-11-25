@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { Container, Paper, Stack, TextField, Typography, Button, Box } from "@mui/material";
+import { Container, Paper, Stack, Typography, Button, Box, CircularProgress } from "@mui/material";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import Field from "./input/Field";
+import { loginUser } from "../services/users";
 
 function LoginPage({ onLogin, isAuthenticated }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
@@ -13,10 +17,21 @@ function LoginPage({ onLogin, isAuthenticated }) {
     return <Navigate to={from} replace />;
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    onLogin({ username, password });
-    navigate(from, { replace: true });
+    setError("");
+    setIsLoading(true);
+
+    try {
+      await loginUser(username, password);
+      onLogin();
+      navigate(from, { replace: true });
+    } catch (err) {
+      const message = err?.response?.data?.message || "Usuario y/o contraseña incorrectos.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -32,24 +47,36 @@ function LoginPage({ onLogin, isAuthenticated }) {
                 Por ahora aceptamos cualquier combinación de usuario y contraseña.
               </Typography>
             </Stack>
-            <TextField
+            <Field
               label="Usuario"
               value={username}
-              onChange={(event) => setUsername(event.target.value)}
+              onChange={(newValue) => setUsername(newValue)}
               autoFocus
               fullWidth
               required
             />
-            <TextField
+            <Field
               label="Contraseña"
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(newValue) => setPassword(newValue)}
               fullWidth
               required
             />
-            <Button type="submit" variant="contained" size="large">
-              Entrar
+            {error && (
+              <Typography variant="body2" color="error">
+                {error}
+              </Typography>
+            )}
+            <Button type="submit" variant="contained" size="large" disabled={isLoading}>
+              {isLoading ? (
+                <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+                  <CircularProgress size={20} />
+                  <span>Iniciando Sesion</span>
+                </Stack>
+              ) : (
+                "Entrar"
+              )}
             </Button>
           </Stack>
         </Paper>

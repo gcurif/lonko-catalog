@@ -9,8 +9,8 @@ export async function getUserByUsername(username) {
   return data;
 }
 
-export async function loginUser(credentials) {
-  const { data } = await axiosClient.post("/users/login", credentials);
+export async function loginUser(username, password) {
+  const { data } = await axiosClient.post("/users/login", { username, password });
   return data;
 }
 
