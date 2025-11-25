@@ -21,6 +21,7 @@ import EditOptionList from "./views/edit/EditOptionList";
 import Logout from "./views/Logout";
 import Gallery from "./views/search/Gallery";
 import env from "./config/env";
+import { SchemaProvider } from "./contexts/SchemaContext";
 
 const VIEW_ROUTES = [
   { path: "/search", title: "Búsqueda", Component: Search },
@@ -100,39 +101,30 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
             path="/"
             element={
               <ProtectedRoute isAuthenticated={isAuthenticated}>
-                <Container maxWidth="md">
-                  <ViewSelector routes={routes} onNavigate={(path) => navigate(path)} />
-                </Container>
-              </ProtectedRoute>
-            }
-          />
-
-          {routes.map((route) => (
-            <Route
-              key={route.path}
-              path={route.path}
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  {renderRoute(route)}
-                </ProtectedRoute>
-              }
-            />
-          ))}
-
-          <Route
-            path="/editarwea/:optionId"
-            element={
-              <ProtectedRoute isAuthenticated={isAuthenticated}>
-                <EditOptionList />
+                <SchemaProvider>
+                  <Container maxWidth="md">
+                    <ViewSelector routes={routes} onNavigate={(path) => navigate(path)} />
+                  </Container>
+                </SchemaProvider>
               </ProtectedRoute>
             }
           />
 
           <Route
-            path="/gallery"
+            path="/*"
             element={
               <ProtectedRoute isAuthenticated={isAuthenticated}>
-                <Gallery />
+                <SchemaProvider>
+                  <Routes>
+                    {routes.map((route) => (
+                      <Route key={route.path} path={route.path.slice(1)} element={renderRoute(route)} />
+                    ))}
+
+                    <Route path="editarwea/:optionId" element={<EditOptionList />} />
+                    <Route path="gallery" element={<Gallery />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </SchemaProvider>
               </ProtectedRoute>
             }
           />

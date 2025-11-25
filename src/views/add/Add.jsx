@@ -4,43 +4,24 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import FieldSelect from "../../components/input/FieldSelect";
 import Field from "../../components/input/Field";
-import { listSchemas } from "../../services/schemas";
+import { useSchemas } from "../../contexts/SchemaContext";
 
 function Add() {
-  const [schema, setSchema] = useState([]);
+  const { schema, isSchemaLoading } = useSchemas();
   const [form, setForm] = useState({});
-  const [isSchemaLoading, setIsSchemaLoading] = useState(false);
-
-  function handleSelectChange(field) {
-    return (value) => {
-      setForm((prev) => ({ ...prev, [field]: value }));
-    };
-  }
-
-  useEffect(() => {
-    async function loadSchema() {
-      setIsSchemaLoading(true);
-      try {
-        const data = await listSchemas();
-        const parsedSchema = Array.isArray(data) ? data : data?.schema ?? [];
-        setSchema(parsedSchema);
-      } catch (error) {
-        console.error("Error al cargar el esquema de alta", error);
-        setSchema([]);
-      } finally {
-        setIsSchemaLoading(false);
-      }
-    }
-
-    loadSchema();
-  }, []);
+  const sortedSchema = useMemo(() => {
+    if (!Array.isArray(schema)) return [];
+    return [...schema].sort(
+      (a, b) => (a?.orderToShow ?? Number.MAX_SAFE_INTEGER) - (b?.orderToShow ?? Number.MAX_SAFE_INTEGER),
+    );
+  }, [schema]);
 
   useEffect(() => {
-    if (!Array.isArray(schema)) return;
+    if (!Array.isArray(sortedSchema)) return;
 
     setForm((prev) => {
       const next = { ...prev };
-      schema.forEach((field) => {
+      sortedSchema.forEach((field) => {
         const key = field?.name || field?.label;
         if (key && !(key in next)) {
           next[key] = "";
@@ -48,14 +29,13 @@ function Add() {
       });
       return next;
     });
-  }, [schema]);
+  }, [sortedSchema]);
 
-  const sortedSchema = useMemo(() => {
-    if (!Array.isArray(schema)) return [];
-    return [...schema].sort(
-      (a, b) => (a?.orderToShow ?? Number.MAX_SAFE_INTEGER) - (b?.orderToShow ?? Number.MAX_SAFE_INTEGER),
-    );
-  }, [schema]);
+  function handleSelectChange(field) {
+    return (value) => {
+      setForm((prev) => ({ ...prev, [field]: value }));
+    };
+  }
 
   function renderField(field, index) {
     const { type, name, label, options = [] } = field || {};
