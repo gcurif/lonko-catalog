@@ -13,34 +13,51 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
-import detail1 from "../assets/images/detail/1.jpeg";
-import detail2 from "../assets/images/detail/2.jpeg";
-import detail3 from "../assets/images/detail/3.jpeg";
-import detail4 from "../assets/images/detail/4.jpeg";
-import detail5 from "../assets/images/detail/5.jpeg";
-import detail6 from "../assets/images/detail/6.jpeg";
-import detail7 from "../assets/images/detail/7.jpeg";
-import detail8 from "../assets/images/detail/8.jpeg";
+import detail1 from "../../assets/images/detail/1.jpeg";
+import detail2 from "../../assets/images/detail/2.jpeg";
+import detail3 from "../../assets/images/detail/3.jpeg";
+import detail4 from "../../assets/images/detail/4.jpeg";
+import detail5 from "../../assets/images/detail/5.jpeg";
+import detail6 from "../../assets/images/detail/6.jpeg";
+import detail7 from "../../assets/images/detail/7.jpeg";
+import detail8 from "../../assets/images/detail/8.jpeg";
 
 function Gallery() {
   const navigate = useNavigate();
   const location = useLocation();
-  const result = location.state?.result;
+  const item = location.state?.item || location.state?.result;
   const [selectedImage, setSelectedImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
 
   const images = useMemo(
-    () => [
-      { src: detail1, alt: "Detalle 1" },
-      { src: detail2, alt: "Detalle 2" },
-      { src: detail3, alt: "Detalle 3" },
-      { src: detail4, alt: "Detalle 4" },
-      { src: detail5, alt: "Detalle 5" },
-      { src: detail6, alt: "Detalle 6" },
-      { src: detail7, alt: "Detalle 7" },
-      { src: detail8, alt: "Detalle 8" },
-    ],
-    []
+    () => {
+      const fallbackImages = [
+        { src: detail1, alt: "Detalle 1" },
+        { src: detail2, alt: "Detalle 2" },
+        { src: detail3, alt: "Detalle 3" },
+        { src: detail4, alt: "Detalle 4" },
+        { src: detail5, alt: "Detalle 5" },
+        { src: detail6, alt: "Detalle 6" },
+        { src: detail7, alt: "Detalle 7" },
+        { src: detail8, alt: "Detalle 8" },
+      ];
+
+      if (item?.imgs?.length) {
+        const fromItem = item.imgs
+          .map((img, index) => ({
+            src: img.publicUrl || img.url,
+            alt: `${item.name || "Detalle"} ${index + 1}`,
+          }))
+          .filter((img) => Boolean(img.src));
+
+        if (fromItem.length) {
+          return fromItem;
+        }
+      }
+
+      return fallbackImages;
+    },
+    [item]
   );
 
   function handleOpenImage(image) {
@@ -65,7 +82,7 @@ function Gallery() {
             <Box>
               <Typography variant="h4">Galería</Typography>
               <Typography variant="subtitle1" color="text.secondary">
-                {result?.title || "Visualizá los detalles del repuesto"}
+                {item?.name || "Visualizá los detalles del repuesto"}
               </Typography>
             </Box>
             <Button
@@ -80,7 +97,7 @@ function Gallery() {
           </Stack>
 
           <Typography variant="body2" color="text.secondary">
-            Código: {result?.code || "N/D"}
+            Código: {item?.code || "N/D"}
           </Typography>
 
           <Grid container spacing={2}>

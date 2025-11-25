@@ -14,17 +14,17 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ViewSelector from "./components/ViewSelector";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./components/LoginPage";
-import Search from "./views/Search";
-import AddI from "./views/AddI";
-import EditOptionsOverview from "./views/EditOptionsOverview";
-import EditOptionList from "./views/EditOptionList";
+import Search from "./views/search/Search";
+import Add from "./views/add/Add";
+import EditOptionsOverview from "./views/edit/EditOptionsOverview";
+import EditOptionList from "./views/edit/EditOptionList";
 import Logout from "./views/Logout";
-import Gallery from "./views/Gallery";
+import Gallery from "./views/search/Gallery";
 import env from "./config/env";
 
 const VIEW_ROUTES = [
   { path: "/search", title: "Búsqueda", Component: Search },
-  { path: "/add", title: "Agregar Nuevo", Component: AddI },
+  { path: "/add", title: "Agregar Nuevo", Component: Add },
   { path: "/editarwea", title: "Editar Opciones", Component: EditOptionsOverview },
   { path: "/logout", title: "Cerrar Sesión", Component: Logout },
 ];

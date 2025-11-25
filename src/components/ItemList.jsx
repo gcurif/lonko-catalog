@@ -5,6 +5,7 @@ function ItemList({
   isLoading,
   hasSearched,
   results,
+  schema = [],
   onViewImages,
   loadingContainerRef,
   resultsContainerRef,
@@ -45,10 +46,11 @@ function ItemList({
       )}
 
       {!isLoading &&
-        results.map((result, index) => (
+        results.map((item, index) => (
           <ItemDetail
-            key={result.id}
-            result={result}
+            key={item.id || `item-${index}`}
+            item={item}
+            schema={schema}
             index={index}
             onViewImages={onViewImages}
             focusRef={index === 0 ? resultsContainerRef : null}

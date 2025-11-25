@@ -1,19 +1,44 @@
 import { Box, Button, Paper, Stack, Typography } from "@mui/material";
+import defaultDetailImage from "../assets/images/detail/default.jpg";
 
-function ItemDetail({ result, index, onViewImages, focusRef }) {
+function ItemDetail({ item, schema = [], index, onViewImages, focusRef }) {
+  const sortedSchema = Array.isArray(schema)
+    ? [...schema].sort(
+        (a, b) => (a?.orderToShow ?? Number.MAX_SAFE_INTEGER) - (b?.orderToShow ?? Number.MAX_SAFE_INTEGER)
+      )
+    : [];
+
+  const propertiesToShow =
+    sortedSchema.length > 0
+      ? sortedSchema.map((field) => ({
+          key: field?.name || field?.label,
+          label: field?.label || field?.name || "Campo",
+          value: item?.properties?.[field?.name],
+        }))
+      : Object.entries(item?.properties || {}).map(([key, value]) => ({
+          key,
+          label: key,
+          value,
+        }));
+
+  const hasImage = Array.isArray(item?.imgs) && item.imgs.some((img) => img?.publicUrl || img?.url);
+  const firstImage = hasImage ? item.imgs.find((img) => img?.publicUrl || img?.url) : null;
+  const imageSrc = firstImage?.publicUrl || firstImage?.url || defaultDetailImage;
+  const isImageClickable = hasImage && typeof onViewImages === "function";
+
   return (
     <Paper
       elevation={2}
       sx={{ mt: 4, p: 4, borderRadius: 4 }}
       ref={focusRef}
       tabIndex={index === 0 ? -1 : undefined}
-      aria-label={`Resultado ${index + 1}: ${result.title}`}
+      aria-label={`Resultado ${index + 1}: ${item?.name || "Sin nombre"}`}
     >
       <Stack spacing={3}>
         <Box>
-          <Typography variant="h5">{result.title}</Typography>
+          <Typography variant="h5">{item?.name || "Sin nombre"}</Typography>
           <Typography variant="subtitle1" color="text.secondary">
-            Código: {result.code}
+            Código: {item?.code || "N/D"}
           </Typography>
         </Box>
 
@@ -24,90 +49,31 @@ function ItemDetail({ result, index, onViewImages, focusRef }) {
         >
           <Box
             component="img"
-            src={result.image}
-            alt={result.title}
+            src={imageSrc}
+            alt={item?.name || "Repuesto"}
             sx={{
               width: { xs: "100%", sm: 184 },
               height: { xs: 200, sm: 184 },
               objectFit: "cover",
               borderRadius: 2,
-              cursor: "pointer",
+              cursor: isImageClickable ? "pointer" : "default",
             }}
-            onClick={() => onViewImages(result)}
+            onClick={isImageClickable ? () => onViewImages(item) : undefined}
           />
+
           <Stack spacing={1.2} flexGrow={1}>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              Descripción:{" "}
-              <Typography component="span" variant="body2" color="text.primary" sx={{ fontWeight: 400 }}>
-                {result.description}
-              </Typography>
-            </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              Compatibilidad:{" "}
-              <Typography component="span" variant="body2" color="text.primary" sx={{ fontWeight: 400 }}>
-                {result.compatibility}
-              </Typography>
-            </Typography>
-            <Typography variant="body2">
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                Marca:
-              </Box>{" "}
-              {result.brand}
-            </Typography>
-            <Typography variant="body2">
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                Modelo:
-              </Box>{" "}
-              {result.model}
-            </Typography>
-            <Typography variant="body2">
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                Año:
-              </Box>{" "}
-              {result.year}
-            </Typography>
-            <Typography variant="body2">
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                Tracción:
-              </Box>{" "}
-              {result.traction}
-            </Typography>
-            <Typography variant="body2">
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                Combustible:
-              </Box>{" "}
-              {result.fuel}
-            </Typography>
-            <Typography variant="body2">
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                Cilindrada:
-              </Box>{" "}
-              {result.displacement}
-            </Typography>
-            <Typography variant="body2">
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                Costo:
-              </Box>{" "}
-              {result.cost}
-            </Typography>
-            <Typography variant="body2">
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                Seguro:
-              </Box>{" "}
-              {result.insurance}
-            </Typography>
-            <Typography variant="body2">
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                Flete:
-              </Box>{" "}
-              {result.freight}
-            </Typography>
-            <Typography variant="body2">
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                Valor CIF:
-              </Box>{" "}
-              {result.cif}
-            </Typography>
+            {propertiesToShow.map(({ key, label, value }) => {
+              if (!key) return null;
+
+              return (
+                <Typography key={key} variant="body2" sx={{ fontWeight: 600 }}>
+                  {label}:{" "}
+                  <Typography component="span" variant="body2" color="text.primary" sx={{ fontWeight: 400 }}>
+                    {value ?? "N/D"}
+                  </Typography>
+                </Typography>
+              );
+            })}
           </Stack>
         </Stack>
 
@@ -115,7 +81,8 @@ function ItemDetail({ result, index, onViewImages, focusRef }) {
           variant="contained"
           color="primary"
           sx={{ alignSelf: "flex-start", cursor: "pointer" }}
-          onClick={() => onViewImages(result)}
+          onClick={() => onViewImages?.(item)}
+          disabled={!hasImage}
         >
           Ver Imágenes
         </Button>

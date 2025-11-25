@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Container,
@@ -9,48 +9,81 @@ import {
   Box,
   Button,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-const OPTIONS_BY_GROUP = {
-  marca: [
-    "Aisin",
-    "Alfa Romeo",
-    "BMW",
-    "Citroën",
-    "Fiat",
-    "Ford",
-    "General Motors",
-    "Honda",
-    "Hyundai",
-    "Mazda",
-  ],
-  modelo: ["Hilux", "Ranger", "Frontier", "Amarok", "Bronco"],
-  traccion: ["4x2", "4x4", "AWD"],
-  combustible: ["Nafta", "Diésel", "Híbrido", "Eléctrico"],
-};
-
-const LABELS = {
-  marca: "Marca",
-  modelo: "Modelo",
-  traccion: "Tracción",
-  combustible: "Combustible",
-};
+import { listSchemas } from "../../services/schemas";
 
 function EditOptionList() {
   const { optionId } = useParams();
   const navigate = useNavigate();
+  const [schema, setSchema] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const options = OPTIONS_BY_GROUP[optionId] ?? [];
-  const title = LABELS[optionId] ?? "Opciones";
+  useEffect(() => {
+    async function loadSchema() {
+      setIsLoading(true);
+      try {
+        const data = await listSchemas();
+        const parsed = Array.isArray(data) ? data : data?.schema ?? [];
+        setSchema(parsed);
+      } catch (error) {
+        console.error("Error al cargar las opciones del esquema", error);
+        setSchema([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadSchema();
+  }, []);
+
+  const optionField = useMemo(
+    () => schema.find((field) => field?.type === "option" && field?.name === optionId),
+    [schema, optionId],
+  );
+
+  const options = optionField?.options ?? [];
+  const title = optionField?.label || optionField?.name || "Opciones";
 
   const sortedOptions = useMemo(
-    () => [...options].sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" })),
+    () =>
+      [...options].sort((a, b) =>
+        (a?.label || a?.name || "").localeCompare(b?.label || b?.name || "", "es", {
+          sensitivity: "base",
+        }),
+      ),
     [options],
   );
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="sm" sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (!optionField) {
+    return (
+      <Container maxWidth="sm">
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 4, bgcolor: "background.default", mt: 2 }}>
+          <Stack spacing={2}>
+            <Typography variant="h5">No encontramos este grupo de opciones</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Revisa que el esquema esté configurado y vuelve a intentar.
+            </Typography>
+            <Button variant="contained" onClick={() => navigate(-1)}>
+              Volver
+            </Button>
+          </Stack>
+        </Paper>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="sm">
@@ -70,10 +103,11 @@ function EditOptionList() {
 
           <Stack spacing={2}>
             {sortedOptions.map((option, index) => {
-              const isFavorite = index < 3;
+              const label = option?.label || option?.name || "";
+              const isFavorite = Boolean(option?.fav);
               return (
                 <Paper
-                  key={option}
+                  key={label || index}
                   elevation={1}
                   sx={{
                     px: 2,
@@ -84,7 +118,7 @@ function EditOptionList() {
                     gap: 1,
                   }}
                 >
-                  <Typography variant="subtitle1">{option}</Typography>
+                  <Typography variant="subtitle1">{label || "Sin etiqueta"}</Typography>
                   <Box sx={{ display: "flex", gap: 1 }}>
                     <IconButton color="warning" size="small">
                       {isFavorite ? <StarIcon /> : <StarBorderIcon />}

@@ -5,8 +5,8 @@ export async function listItems() {
   return data;
 }
 
-export async function getItem(id) {
-  const { data } = await axiosClient.get(`/items/${id}`);
+export async function getItem(code) {
+  const { data } = await axiosClient.get(`/items/${code}`);
   return data;
 }
 
@@ -15,8 +15,14 @@ export async function createItem(payload) {
   return data;
 }
 
+export async function advancedSearch(payload) {
+  const { data } = await axiosClient.post("/search/advanced-search", payload);
+  return data;
+}
+
 export default {
   listItems,
   getItem,
   createItem,
+  advancedSearch,
 };
