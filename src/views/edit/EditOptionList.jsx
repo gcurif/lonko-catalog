@@ -19,6 +19,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useSchemas } from "../../contexts/SchemaContext";
 import { updateSchemaOptions } from "../../services/schemas";
 import ModalDeleteOption from "../../components/ModalDeleteOption";
+import ModalOptionExists from "../../components/ModalOptionExists";
 
 function OptionEditor({ value: initialValue = "", onChange, onSave, onCancel, autoFocus }) {
   const [value, setValue] = useState(initialValue || "");
@@ -71,9 +72,10 @@ function EditOptionList() {
   const [deletingOption, setDeletingOption] = useState(null);
   const [optionsState, setOptionsState] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
 
   const optionField = useMemo(
-    () => schema.find((field) => field?.type === "option" && field?.name === optionId),
+    () => schema.find((field) => field?.type === "option" && field?.id === optionId),
     [schema, optionId],
   );
 
@@ -122,6 +124,20 @@ function EditOptionList() {
     }
   };
 
+  const optionExists = (value, excludeKey = null) => {
+    const normalizedValue = value.trim().toLowerCase();
+    return optionsState.some((opt) => {
+      const key = opt?.value || opt?.name || opt?.label;
+      if (excludeKey && key === excludeKey) return false;
+      const normalizedOption = normalizeLabel(opt).trim().toLowerCase();
+      return normalizedOption === normalizedValue;
+    });
+  };
+
+  const handleCloseDuplicateModal = () => {
+    setShowDuplicateModal(false);
+  };
+
   const handleStartNew = () => {
     setShowNewEditor(true);
     setEditingOption(null);
@@ -131,6 +147,10 @@ function EditOptionList() {
   const handleSaveNew = (value) => {
     const trimmed = value.trim();
     if (!trimmed) return;
+    if (optionExists(trimmed)) {
+      setShowDuplicateModal(true);
+      return;
+    }
     const newOption = { label: trimmed, name: trimmed, value: trimmed, fav: false };
     const updated = [...optionsState, newOption];
     persistOptions(updated);
@@ -146,6 +166,10 @@ function EditOptionList() {
   const handleSaveEdit = (value) => {
     const trimmed = value.trim();
     if (!trimmed) return;
+    if (optionExists(trimmed, editingOption)) {
+      setShowDuplicateModal(true);
+      return;
+    }
     const updated = optionsState.map((opt) => {
       const key = opt?.value || opt?.name || opt?.label;
       if (key !== editingOption) return opt;
@@ -319,6 +343,7 @@ function EditOptionList() {
             onConfirm={handleConfirmDelete}
             onCancel={handleCancelDelete}
           />
+          <ModalOptionExists open={showDuplicateModal} onClose={handleCloseDuplicateModal} />
         </Stack>
       </Paper>
     </Container>

@@ -34,7 +34,8 @@ function EditOptionsOverview() {
                 </Typography>
               )}
               {optionFields.map((field) => {
-                const fieldId = field?.name;
+                console.log('field', field);
+                const fieldId = field?.id;
                 const fieldLabel = field?.label || field?.name;
                 if (!fieldId) return null;
 
@@ -44,7 +45,7 @@ function EditOptionsOverview() {
                     variant="contained"
                     color="primary"
                     sx={{ py: 2, borderRadius: 3 }}
-                    onClick={() => navigate(`/editarwea/${fieldId}`)}
+                    onClick={() => navigate(`/editar/${fieldId}`)}
                   >
                     {fieldLabel}
                   </Button>

@@ -26,7 +26,7 @@ import { SchemaProvider } from "./contexts/SchemaContext";
 const VIEW_ROUTES = [
   { path: "/search", title: "Búsqueda", Component: Search },
   { path: "/add", title: "Agregar Nuevo", Component: Add },
-  { path: "/editarwea", title: "Editar Opciones", Component: EditOptionsOverview },
+  { path: "/editar", title: "Editar Opciones", Component: EditOptionsOverview },
   { path: "/logout", title: "Cerrar Sesión", Component: Logout },
 ];
 
@@ -120,7 +120,7 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
                       <Route key={route.path} path={route.path.slice(1)} element={renderRoute(route)} />
                     ))}
 
-                    <Route path="editarwea/:optionId" element={<EditOptionList />} />
+                    <Route path="editar/:optionId" element={<EditOptionList />} />
                     <Route path="gallery" element={<Gallery />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
