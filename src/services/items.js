@@ -16,7 +16,7 @@ export async function createItem(payload) {
 }
 
 export async function advancedSearch(payload) {
-  const { data } = await axiosClient.post("/search/advanced-search", payload);
+  const { data } = await axiosClient.post("/items/advanced-search", payload);
   return data;
 }
 

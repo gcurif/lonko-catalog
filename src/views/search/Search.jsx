@@ -89,7 +89,7 @@ function Search() {
       let baseResults = [];
 
       if (Object.keys(optionFilters).length > 0) {
-        const data = await advancedSearch({ filters: optionFilters });
+        const data = await advancedSearch(optionFilters);
         baseResults = Array.isArray(data) ? data : data?.items ?? [];
       } else {
         const data = await listItems();
