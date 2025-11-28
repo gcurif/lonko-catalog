@@ -22,6 +22,7 @@ import Logout from "./views/Logout";
 import Gallery from "./views/search/Gallery";
 import env from "./config/env";
 import { SchemaProvider } from "./contexts/SchemaContext";
+import { BorderColor } from "@mui/icons-material";
 
 const VIEW_ROUTES = [
   { path: "/search", title: "Búsqueda", Component: Search },
@@ -50,8 +51,32 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
       <AppBar position="static" elevation={0}>
         <Toolbar>
           <Typography variant="h6" component="div">
-            Lonko Multi
+            Motorama 1.0
           </Typography>
+          <Box sx={{ flexGrow: 1 }} />
+          {isAuthenticated && canGoBack && (
+            <>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  navigate("/", { replace: true });
+                }}
+                style={{ BorderColor: 'white', borderWidth: 2 }}
+              >
+                <ArrowBackIcon />
+                Volver Atrás
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => {
+                  navigate("/", { replace: true });
+                }}
+                style={{ BorderColor: 'white', borderWidth: 2 }}
+                sx={{ marginLeft: '1em' }}
+              >Menu Principal</Button>
+            </>
+          )
+          }
           <Box sx={{ flexGrow: 1 }} />
           {isAuthenticated && (
             <Button
@@ -68,34 +93,6 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
       </AppBar>
 
       <Box component="main" sx={{ py: 4 }}>
-        {!isLoginRoute && (
-          <Container maxWidth="lg" sx={{ mb: 2 }}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              {canGoBack && (
-                <>
-                  <IconButton
-                    aria-label="Volver"
-                    onClick={() => navigate(-1)}
-                    sx={{ display: { xs: "inline-flex", sm: "none" } }}
-                  >
-                    <ArrowBackIcon />
-                  </IconButton>
-                  <Button
-                    variant="outlined"
-                    onClick={() => navigate(-1)}
-                    sx={{ display: { xs: "none", sm: "inline-flex" } }}
-                  >
-                    Atrás
-                  </Button>
-                </>
-              )}
-              <Typography variant="subtitle2" color="text.secondary">
-                {location.pathname === "/" ? "Seleccioná una vista" : `Ruta actual: ${location.pathname}`}
-              </Typography>
-            </Stack>
-          </Container>
-        )}
-
         <Routes>
           <Route
             path="/"
@@ -119,7 +116,6 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
                     {routes.map((route) => (
                       <Route key={route.path} path={route.path.slice(1)} element={renderRoute(route)} />
                     ))}
-
                     <Route path="editar/:optionId" element={<EditOptionList />} />
                     <Route path="gallery" element={<Gallery />} />
                     <Route path="*" element={<Navigate to="/" replace />} />

@@ -15,11 +15,7 @@ function ViewSelector({ routes, onNavigate }) {
   return (
     <Stack spacing={3} alignItems="center">
       <Typography variant="h4" component="h1" align="center">
-        Seleccioná una vista
-      </Typography>
-      <Typography variant="body1" color="text.secondary" align="center" maxWidth={520}>
-        Cada opción abre una pantalla distinta para que puedas trabajar con los flujos reales de la
-        app.
+        Menú Principal
       </Typography>
       <Grid container spacing={2} justifyContent="center">
         {routes.map((route) => (
