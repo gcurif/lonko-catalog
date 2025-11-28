@@ -45,7 +45,7 @@ function ItemDetail({ item, schema = [], index, onViewImages, focusRef }) {
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={3}
-          alignItems={{ xs: "flex-start", sm: "center" }}
+          alignItems={{ xs: "flex-start", sm: "start" }}
         >
           <Box
             component="img"
@@ -76,16 +76,25 @@ function ItemDetail({ item, schema = [], index, onViewImages, focusRef }) {
             })}
           </Stack>
         </Stack>
+        <Stack direction="row" spacing={2}>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ alignSelf: "flex-start", cursor: "pointer" }}
+            onClick={() => onViewImages?.(item)}
+            disabled={!hasImage}
+          >
+            Ver Galeria
+          </Button>
 
-        <Button
-          variant="contained"
-          color="primary"
-          sx={{ alignSelf: "flex-start", cursor: "pointer" }}
-          onClick={() => onViewImages?.(item)}
-          disabled={!hasImage}
-        >
-          Ver Imágenes
-        </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ alignSelf: "flex-start", cursor: "pointer" }}
+          >
+            Editar
+          </Button>
+        </Stack>
       </Stack>
     </Paper>
   );

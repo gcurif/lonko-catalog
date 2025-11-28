@@ -48,7 +48,7 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
 
   return (
     <>
-      <AppBar position="static" elevation={0}>
+      <AppBar position="fixed" elevation={0}>
         <Toolbar>
           <Typography variant="h6" component="div">
             Motorama 1.0
@@ -91,6 +91,7 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
           )}
         </Toolbar>
       </AppBar>
+      <Toolbar />
 
       <Box component="main" sx={{ py: 4 }}>
         <Routes>
