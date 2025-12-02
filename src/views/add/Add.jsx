@@ -6,7 +6,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import FieldSelect from "../../components/input/FieldSelect";
 import Field from "../../components/input/Field";
 import { useSchemas } from "../../contexts/SchemaContext";
-import { createItem } from "../../services/items";
+import { createItem, uploadItemImages } from "../../services/items";
 
 function Add() {
   const { schema, isSchemaLoading } = useSchemas();
@@ -176,7 +176,15 @@ function Add() {
     setIsSubmitting(true);
 
     try {
-      await createItem(payload);
+      const created = await createItem(payload);
+      const createdId = created?.id;
+      if (createdId && selectedImages.length > 0) {
+        try {
+          await uploadItemImages(createdId, selectedImages);
+        } catch (uploadError) {
+          console.error("Error al subir imágenes", uploadError);
+        }
+      }
       handleReset({ keepStatus: true });
       setSubmitSuccess("Elemento creado correctamente.");
     } catch (error) {
