@@ -3,12 +3,14 @@ import { Container, Paper, Stack, Typography, Button, Box, CircularProgress } fr
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import Field from "./input/Field";
 import { loginUser } from "../services/users";
+import { useUser } from "../contexts/UserContext";
 
-function LoginPage({ onLogin, isAuthenticated }) {
+function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const { login, isAuthenticated } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
@@ -23,8 +25,8 @@ function LoginPage({ onLogin, isAuthenticated }) {
     setIsLoading(true);
 
     try {
-      await loginUser(username, password);
-      onLogin();
+      const data = await loginUser(username, password);
+      login(data);
       navigate(from, { replace: true });
     } catch (err) {
       const message = err?.response?.data?.message || "Usuario y/o contraseña incorrectos.";
@@ -42,9 +44,6 @@ function LoginPage({ onLogin, isAuthenticated }) {
             <Stack spacing={1}>
               <Typography variant="h4" align="center">
                 Iniciar sesión
-              </Typography>
-              <Typography variant="body2" color="text.secondary" align="center">
-                Por ahora aceptamos cualquier combinación de usuario y contraseña.
               </Typography>
             </Stack>
             <Field

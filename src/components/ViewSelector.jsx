@@ -3,11 +3,15 @@ import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import SwitchAccountIcon from "@mui/icons-material/SwitchAccount";
+import GroupIcon from "@mui/icons-material/Group";
+import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 
 const ICONS = {
   "/search": <SearchIcon />,
   "/add": <AddIcon />,
-  "/edit": <EditNoteIcon />,
+  "/editar": <EditNoteIcon />,
+  "/users": <GroupIcon />,
+  "/registro": <LibraryBooksIcon />,
   "/logout": <SwitchAccountIcon />,
 };
 

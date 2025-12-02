@@ -1,14 +1,5 @@
-import { useEffect, useState } from "react";
-import {
-  AppBar,
-  Box,
-  Button,
-  Container,
-  IconButton,
-  Stack,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import { useEffect } from "react";
+import { AppBar, Box, Button, Container, Toolbar, Typography } from "@mui/material";
 import { HashRouter, Routes, Route, useNavigate, Navigate, useLocation } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ViewSelector from "./components/ViewSelector";
@@ -20,27 +11,38 @@ import EditOptionsOverview from "./views/edit/EditOptionsOverview";
 import EditOptionList from "./views/edit/EditOptionList";
 import Logout from "./views/Logout";
 import Gallery from "./views/search/Gallery";
+import Users from "./views/users/Users";
+import Registro from "./views/registro/Registro";
 import env from "./config/env";
 import { SchemaProvider } from "./contexts/SchemaContext";
-import { BorderColor } from "@mui/icons-material";
+import { UserProvider, useUser } from "./contexts/UserContext";
 
 const VIEW_ROUTES = [
   { path: "/search", title: "Búsqueda", Component: Search },
-  { path: "/add", title: "Agregar Nuevo", Component: Add },
-  { path: "/editar", title: "Editar Opciones", Component: EditOptionsOverview },
+  { path: "/add", title: "Agregar Nuevo", Component: Add, requiresAdmin: true },
+  { path: "/editar", title: "Editar Opciones", Component: EditOptionsOverview, requiresAdmin: true },
+  { path: "/users", title: "Usuarios", Component: Users, requiresAdmin: true },
+  { path: "/registro", title: "Registro", Component: Registro },
   { path: "/logout", title: "Cerrar Sesión", Component: Logout },
 ];
 
-function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
+function AppShell({ routes }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthenticated, logout } = useUser();
 
   const isLoginRoute = location.pathname === "/login";
   const canGoBack = location.pathname !== "/" && !isLoginRoute;
+  const isAdmin = user?.roles?.includes("ADMIN");
+  const allowedRoutes = routes.filter((route) => !route.requiresAdmin || isAdmin);
 
   function renderRoute(route) {
     if (route.path === "/logout") {
-      return <route.Component onLogout={onLogout} />;
+      return <route.Component onLogout={logout} />;
+    }
+
+    if (route.requiresAdmin && !isAdmin) {
+      return <Navigate to="/" replace />;
     }
 
     return <route.Component />;
@@ -101,7 +103,7 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
               <ProtectedRoute isAuthenticated={isAuthenticated}>
                 <SchemaProvider>
                   <Container maxWidth="md">
-                    <ViewSelector routes={routes} onNavigate={(path) => navigate(path)} />
+                    <ViewSelector routes={allowedRoutes} onNavigate={(path) => navigate(path)} />
                   </Container>
                 </SchemaProvider>
               </ProtectedRoute>
@@ -114,10 +116,13 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
               <ProtectedRoute isAuthenticated={isAuthenticated}>
                 <SchemaProvider>
                   <Routes>
-                    {routes.map((route) => (
+                    {allowedRoutes.map((route) => (
                       <Route key={route.path} path={route.path.slice(1)} element={renderRoute(route)} />
                     ))}
-                    <Route path="editar/:optionId" element={<EditOptionList />} />
+                    <Route
+                      path="editar/:optionId"
+                      element={isAdmin ? <EditOptionList /> : <Navigate to="/" replace />}
+                    />
                     <Route path="gallery" element={<Gallery />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
@@ -128,7 +133,7 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
 
           <Route
             path="/login"
-            element={<LoginPage onLogin={onLogin} isAuthenticated={isAuthenticated} />}
+            element={<LoginPage />}
           />
 
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -139,32 +144,18 @@ function AppShell({ routes, isAuthenticated, onLogout, onLogin }) {
 }
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
   useEffect(() => {
     if (env.apiUrl) {
       console.info(`Usando API_URL: ${env.apiUrl}`);
     }
   }, []);
 
-  function handleLogin() {
-    setIsAuthenticated(true);
-  }
-
-  function handleLogout() {
-    setIsAuthenticated(false);
-  }
-
-  //console.log('env url', process.env.API_URL);
   return (
-    <HashRouter>
-      <AppShell
-        routes={VIEW_ROUTES}
-        isAuthenticated={isAuthenticated}
-        onLogout={handleLogout}
-        onLogin={handleLogin}
-      />
-    </HashRouter>
+    <UserProvider>
+      <HashRouter>
+        <AppShell routes={VIEW_ROUTES} />
+      </HashRouter>
+    </UserProvider>
   );
 }
 
