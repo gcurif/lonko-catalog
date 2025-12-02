@@ -14,7 +14,31 @@ export async function loginUser(username, password) {
   return data;
 }
 
+export async function createUser(payload) {
+  const { data } = await axiosClient.post("/users", payload);
+  return data;
+}
+
+export async function getAllUsers() {
+  const { data } = await axiosClient.get("/users");
+  return data;
+}
+
+export async function updateUser(userId, payload) {
+  const { data } = await axiosClient.put(`/users/${userId}`, payload);
+  return data;
+}
+
+export async function deleteUser(userId) {
+  const { data } = await axiosClient.delete(`/users/${userId}`);
+  return data;
+}
+
 export default {
   getUserByUsername,
   loginUser,
+  createUser,
+  getAllUsers,
+  updateUser,
+  deleteUser,
 };

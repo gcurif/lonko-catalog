@@ -1,4 +1,6 @@
 import { createContext, useContext, useMemo, useState } from "react";
+import { axiosClient } from "../config/axios_config";
+
 
 const UserContext = createContext(null);
 
@@ -6,10 +8,14 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
 
   const login = (userData) => {
-    setUser(userData);
+    const { user, token } = userData;
+    localStorage.setItem("token", token);
+    axiosClient.defaults.headers["Authorization"] = `Bearer ${token}`;
+    setUser(user);
   };
 
   const logout = () => {
+    localStorage.removeItem("token");
     setUser(null);
   };
 

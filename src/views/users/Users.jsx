@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -8,9 +8,9 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  MenuItem,
   Paper,
   Select,
+  MenuItem,
   Stack,
   Table,
   TableBody,
@@ -20,65 +20,112 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
 import DeleteIcon from "@mui/icons-material/Delete";
-import Field from "../../components/input/Field";
+import EditIcon from "@mui/icons-material/Edit";
+import UserForm from "../../components/users/UserForm";
+import { createUser, deleteUser, getAllUsers, updateUser } from "../../services/users";
 
-const ROLE_OPTIONS = ["Administrador", "Operador"];
-
-const MOCK_USERS = [
-  { id: 1, username: "admin", type: "Administrador" },
-  { id: 2, username: "operador1", type: "Operador" },
-  { id: 3, username: "soporte", type: "Operador" },
+const ROLE_OPTIONS = [
+  { label: "Administrador", value: "ADMIN" },
+  { label: "Operador", value: "OPERATOR" },
 ];
 
 function Users() {
-  const [users, setUsers] = useState(MOCK_USERS);
+  const [users, setUsers] = useState([]);
   const [showNewUserForm, setShowNewUserForm] = useState(false);
-  const [newUser, setNewUser] = useState({
-    username: "",
-    password: "",
-    repeatPassword: "",
-    type: ROLE_OPTIONS[0],
-  });
   const [userToDelete, setUserToDelete] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [roleChanges, setRoleChanges] = useState({});
+  const [isUpdatingRoles, setIsUpdatingRoles] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
 
-  const isNewUserValid = useMemo(() => {
-    return (
-      newUser.username.trim() !== "" &&
-      newUser.password.trim() !== "" &&
-      newUser.password === newUser.repeatPassword
-    );
-  }, [newUser]);
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getAllUsers();
+      const list = Array.isArray(data) ? data : data?.items || [];
+      setUsers(list);
+      setRoleChanges({});
+    } catch (error) {
+      console.error("Error al listar usuarios", error);
+      setUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const handleAddUser = () => {
-    if (!isNewUserValid) return;
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-    setUsers((prev) => [
-      ...prev,
-      {
-        id: prev.length ? Math.max(...prev.map((u) => u.id)) + 1 : 1,
-        username: newUser.username.trim(),
-        type: newUser.type,
-      },
-    ]);
-
-    setNewUser({
-      username: "",
-      password: "",
-      repeatPassword: "",
-      type: ROLE_OPTIONS[0],
-    });
-    setShowNewUserForm(false);
+  const handleAddUser = async (payload) => {
+    setIsSaving(true);
+    try {
+      await createUser(payload);
+      await fetchUsers();
+      setShowNewUserForm(false);
+    } catch (error) {
+      console.error("Error al crear usuario", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleChangeRole = (userId, role) => {
-    setUsers((prev) => prev.map((user) => (user.id === userId ? { ...user, type: role } : user)));
+    setUsers((prev) =>
+      prev.map((user) => (getUserId(user) === userId ? { ...user, roles: [role] } : user)),
+    );
+    setRoleChanges((prev) => ({ ...prev, [userId]: role }));
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = async () => {
     if (!userToDelete) return;
-    setUsers((prev) => prev.filter((user) => user.id !== userToDelete.id));
-    setUserToDelete(null);
+    setIsDeleting(true);
+    try {
+      await deleteUser(getUserId(userToDelete));
+      await fetchUsers();
+    } catch (error) {
+      console.error("Error al eliminar usuario", error);
+    } finally {
+      setUserToDelete(null);
+      setIsDeleting(false);
+    }
+  };
+
+  const getUserId = (user) => user?.id || user?._id || user?.username;
+
+  const handleUpdateUser = async (payload) => {
+    if (!editingUser) return;
+    setIsUpdatingUser(true);
+    try {
+      await updateUser(getUserId(editingUser), payload);
+      await fetchUsers();
+      setEditingUser(null);
+    } catch (error) {
+      console.error("Error al actualizar usuario", error);
+    } finally {
+      setIsUpdatingUser(false);
+    }
+  };
+
+  const handleSaveRoleChanges = async () => {
+    if (Object.keys(roleChanges).length === 0) return;
+    setIsUpdatingRoles(true);
+    try {
+      const updates = Object.entries(roleChanges).map(([userId, role]) =>
+        updateUser(userId, { roles: [role] }),
+      );
+      await Promise.all(updates);
+      await fetchUsers();
+    } catch (error) {
+      console.error("Error al actualizar roles", error);
+    } finally {
+      setIsUpdatingRoles(false);
+    }
   };
 
   return (
@@ -88,76 +135,41 @@ function Users() {
           Usuarios
         </Typography>
 
-        <Typography variant="h5" component="h1">
-          Agregar Nuevo Usuario
-        </Typography>
-
         <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
           <Stack spacing={2}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
               <Typography variant="h6">Nuevo Usuario</Typography>
               <Button variant="contained" onClick={() => setShowNewUserForm((prev) => !prev)}>
-                Nuevo Usuario
+                {showNewUserForm ? "Ocultar" : "Nuevo Usuario"}
               </Button>
             </Stack>
 
             {showNewUserForm && (
-              <Stack spacing={2}>
-                <Field
-                  label="Nombre de usuario"
-                  placeholder="Ingresa el usuario"
-                  value={newUser.username}
-                  onChange={(value) => setNewUser((prev) => ({ ...prev, username: value }))}
-                  fullWidth
-                />
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                  <Field
-                    label="Contraseña"
-                    type="password"
-                    placeholder="Contraseña"
-                    value={newUser.password}
-                    onChange={(value) => setNewUser((prev) => ({ ...prev, password: value }))}
-                    fullWidth
-                  />
-                  <Field
-                    label="Repetir contraseña"
-                    type="password"
-                    placeholder="Repite la contraseña"
-                    value={newUser.repeatPassword}
-                    onChange={(value) => setNewUser((prev) => ({ ...prev, repeatPassword: value }))}
-                    fullWidth
-                  />
-                </Stack>
-                <Box>
-                  <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                    Tipo
-                  </Typography>
-                  <Select
-                    fullWidth
-                    value={newUser.type}
-                    onChange={(event) =>
-                      setNewUser((prev) => ({ ...prev, type: event.target.value }))
-                    }
-                  >
-                    {ROLE_OPTIONS.map((role) => (
-                      <MenuItem key={role} value={role}>
-                        {role}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </Box>
-                <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                  <Button variant="outlined" onClick={() => setShowNewUserForm(false)}>
-                    Cancelar
-                  </Button>
-                  <Button variant="contained" onClick={handleAddUser} disabled={!isNewUserValid}>
-                    Guardar usuario
-                  </Button>
-                </Stack>
-              </Stack>
+              <UserForm
+                title="Agregar Nuevo Usuario"
+                roleOptions={ROLE_OPTIONS}
+                onSave={handleAddUser}
+                onCancel={() => setShowNewUserForm(false)}
+                isSaving={isSaving}
+                requirePassword
+              />
             )}
           </Stack>
         </Paper>
+
+        {editingUser && (
+          <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
+            <UserForm
+              title={`Editar usuario: ${editingUser.username}`}
+              roleOptions={ROLE_OPTIONS}
+              initialData={editingUser}
+              onSave={handleUpdateUser}
+              onCancel={() => setEditingUser(null)}
+              isSaving={isUpdatingUser}
+              requirePassword={false}
+            />
+          </Paper>
+        )}
 
 
         <Typography variant="h5" component="h1">
@@ -182,41 +194,79 @@ function Users() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <Typography>{user.username}</Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
-                        <IconButton
-                          color="error"
-                          aria-label={`Eliminar ${user.username}`}
-                          onClick={() => setUserToDelete(user)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                        <Select
-                          value={user.type}
-                          onChange={(event) => handleChangeRole(user.id, event.target.value)}
-                          size="small"
-                          sx={{ minWidth: 160 }}
-                        >
-                          {ROLE_OPTIONS.map((role) => (
-                            <MenuItem key={role} value={role}>
-                              {role}
-                            </MenuItem>
-                          ))}
-                        </Select>
+                {isLoading && (
+                  <TableRow>
+                    <TableCell colSpan={2}>
+                      <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ py: 2 }}>
+                        <CircularProgress size={20} />
+                        <Typography color="text.secondary">Cargando usuarios...</Typography>
                       </Stack>
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
+                {!isLoading &&
+                  users.map((user) => {
+                  const userId = getUserId(user);
+                  const userRole = Array.isArray(user?.roles) ? user.roles[0] : user?.role || "";
+                  return (
+                    <TableRow key={userId}>
+                      <TableCell>
+                        <Typography>{user.username}</Typography>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<EditIcon />}
+                            onClick={() => setEditingUser(user)}
+                          >
+                            Editar
+                          </Button>
+                          <Select
+                            value={userRole || ROLE_OPTIONS[0].value}
+                            onChange={(event) => handleChangeRole(userId, event.target.value)}
+                            size="small"
+                            sx={{ minWidth: 160 }}
+                            disabled={isUpdatingRoles}
+                          >
+                            {ROLE_OPTIONS.map((role) => (
+                              <MenuItem key={role.value} value={role.value}>
+                                {role.label}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                          <IconButton
+                            color="error"
+                            aria-label={`Eliminar ${user.username}`}
+                            onClick={() => setUserToDelete(user)}
+                            disabled={isDeleting}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
           <Box sx={{ p: 2, display: "flex", justifyContent: "flex-end" }}>
-            <Button variant="contained">Guardar cambios</Button>
+            <Button
+              variant="contained"
+              onClick={handleSaveRoleChanges}
+              disabled={isUpdatingRoles || Object.keys(roleChanges).length === 0}
+            >
+              {isUpdatingRoles ? (
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <CircularProgress size={16} />
+                  Guardando
+                </Stack>
+              ) : (
+                "Guardar cambios"
+              )}
+            </Button>
           </Box>
         </Paper>
       </Stack>
