@@ -16,6 +16,8 @@ import Registro from "./views/registro/Registro";
 import env from "./config/env";
 import { SchemaProvider } from "./contexts/SchemaContext";
 import { UserProvider, useUser } from "./contexts/UserContext";
+import { check } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
 
 const VIEW_ROUTES = [
   { path: "/search", title: "Busqueda", Component: Search },
@@ -148,6 +150,32 @@ function App() {
     if (env.apiUrl) {
       console.info(`Usando API_URL: ${env.apiUrl}`);
     }
+  }, []);
+
+  useEffect(() => {
+    const runUpdate = async () => {
+      if (typeof window === "undefined") return;
+      // Tauri v2 expone __TAURI_INTERNALS__ en lugar de __TAURI__, así que validamos ambos.
+      const isTauri = window.__TAURI_INTERNALS__ || window.__TAURI__;
+      if (!isTauri) return;
+      try {
+        console.info("Buscando actualizaciones...");
+        const update = await check();
+        console.info("Resultado updater:", update);
+        if (update?.available) {
+          console.info("Actualización disponible, descargando...");
+          await update.downloadAndInstall();
+          console.info("Actualización instalada, relanzando app.");
+          await relaunch();
+        } else {
+          console.info("No hay actualizaciones disponibles.");
+        }
+      } catch (error) {
+        console.error("Updater error", error);
+      }
+    };
+
+    runUpdate();
   }, []);
 
   return (
