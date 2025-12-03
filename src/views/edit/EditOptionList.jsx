@@ -73,6 +73,8 @@ function EditOptionList() {
   const [optionsState, setOptionsState] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [lastStatus, setLastStatus] = useState(null);
+  const [filter, setFilter] = useState("");
 
   const optionField = useMemo(
     () => schema.find((field) => field?.type === "option" && field?.id === optionId),
@@ -80,25 +82,48 @@ function EditOptionList() {
   );
 
   useEffect(() => {
-    setOptionsState(optionField?.options ?? []);
+    const nextOptions = optionField?.options ?? [];
+    setOptionsState(nextOptions);
+    if (lastStatus?.key) {
+      const exists = nextOptions.some((opt) => {
+        const key = opt?.value || opt?.name || opt?.label;
+        return key === lastStatus.key;
+      });
+      if (!exists) {
+        setLastStatus(null);
+      }
+    }
   }, [optionField]);
 
   const options = optionsState;
   const title = optionField?.label || optionField?.name || "Opciones";
   const normalizeLabel = (opt) => opt?.label || opt?.name || opt?.value || "";
 
-  const sortedOptions = useMemo(
-    () =>
-      [...options].sort((a, b) => {
-        const aFav = Boolean(a?.fav);
-        const bFav = Boolean(b?.fav);
-        if (aFav !== bFav) {
-          return aFav ? -1 : 1;
-        }
-        return normalizeLabel(a).localeCompare(normalizeLabel(b), "es", { sensitivity: "base" });
-      }),
-    [options],
-  );
+  const sortedOptions = useMemo(() => {
+    const base = [...options].sort((a, b) => {
+      const aFav = Boolean(a?.fav);
+      const bFav = Boolean(b?.fav);
+      if (aFav !== bFav) {
+        return aFav ? -1 : 1;
+      }
+      return normalizeLabel(a).localeCompare(normalizeLabel(b), "es", { sensitivity: "base" });
+    });
+
+    if (!lastStatus?.key) return base;
+    const idx = base.findIndex((opt) => {
+      const key = opt?.value || opt?.name || opt?.label;
+      return key === lastStatus.key;
+    });
+    if (idx === -1) return base;
+    const [target] = base.splice(idx, 1);
+    return [target, ...base];
+  }, [options, lastStatus]);
+
+  const filteredOptions = useMemo(() => {
+    if (!filter.trim()) return sortedOptions;
+    const q = filter.toLowerCase();
+    return sortedOptions.filter((opt) => normalizeLabel(opt).toLowerCase().includes(q));
+  }, [sortedOptions, filter]);
 
   const persistOptions = async (updatedOptions) => {
     setIsSaving(true);
@@ -153,6 +178,7 @@ function EditOptionList() {
     }
     const newOption = { label: trimmed, name: trimmed, value: trimmed, fav: false };
     const updated = [...optionsState, newOption];
+    setLastStatus({ key: newOption.value || newOption.name || newOption.label || trimmed, statusLabel: "Nuevo" });
     persistOptions(updated);
     setShowNewEditor(false);
   };
@@ -176,6 +202,7 @@ function EditOptionList() {
       return { ...opt, label: trimmed, name: trimmed, value: opt?.value || trimmed };
     });
     persistOptions(updated);
+    setLastStatus({ key: editingOption, statusLabel: "Modificado" });
     setEditingOption(null);
     setEditingValue("");
   };
@@ -253,6 +280,14 @@ function EditOptionList() {
             />
           </Stack>
 
+          <TextField
+            label="Filtrar"
+            placeholder="Filtrar opciones"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            fullWidth
+          />
+
           <Button
             variant="contained"
             color="primary"
@@ -272,7 +307,7 @@ function EditOptionList() {
           )}
 
           <Stack spacing={2}>
-            {sortedOptions.map((option, index) => {
+            {filteredOptions.map((option, index) => {
               const label = option?.label || option?.name || "";
               const isFavorite = Boolean(option?.fav);
               const optionKey = option?.value || option?.name || option?.label || index;
@@ -290,7 +325,14 @@ function EditOptionList() {
                     gap: 1,
                   }}
                 >
-                  <Typography variant="subtitle1">{label || "Sin etiqueta"}</Typography>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: "100%" }}>
+                    <Typography variant="subtitle1">{label || "Sin etiqueta"}</Typography>
+                    {optionKey === lastStatus?.key && (
+                      <Typography variant="h6" color="success.main" fontWeight={700}>
+                        {lastStatus?.statusLabel || "Nuevo"}
+                      </Typography>
+                    )}
+                  </Stack>
                   <Box sx={{ display: "flex", gap: 1 }}>
                     <IconButton
                       color="warning"
@@ -303,6 +345,7 @@ function EditOptionList() {
                           return { ...opt, fav: !opt?.fav };
                         });
                         persistOptions(updated);
+                        setLastStatus({ key: optionKey, statusLabel: "Modificado" });
                       }}
                     >
                       {isFavorite ? <StarIcon /> : <StarBorderIcon />}
