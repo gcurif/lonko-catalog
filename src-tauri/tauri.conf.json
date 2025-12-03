@@ -32,5 +32,18 @@
       "icons/icon.ico"
     ],
     "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMxM0IzMzBBRTkxMDYzMkEKUldRcVl4RHBDak03d1JFL2s4dXl6MC9Zb3JoK2hvdzVxMnZ4TER6M2RjSEh6dlBneEJ3SXd6dEgK",
+      "endpoints": [
+        "https://lonko-back.gustavo-curif.workers.dev/version"
+      ],     
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
+
+
 }

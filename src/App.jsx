@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import { AppBar, Box, Button, Container, Toolbar, Typography } from "@mui/material";
 import { HashRouter, Routes, Route, useNavigate, Navigate, useLocation } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -18,7 +18,7 @@ import { SchemaProvider } from "./contexts/SchemaContext";
 import { UserProvider, useUser } from "./contexts/UserContext";
 
 const VIEW_ROUTES = [
-  { path: "/search", title: "Búsqueda", Component: Search },
+  { path: "/search", title: "Busqueda", Component: Search },
   { path: "/add", title: "Agregar Nuevo", Component: Add, requiresAdmin: true },
   { path: "/editar", title: "Editar Opciones", Component: EditOptionsOverview, requiresAdmin: true },
   { path: "/users", title: "Usuarios", Component: Users, requiresAdmin: true },
@@ -84,11 +84,11 @@ function AppShell({ routes }) {
             <Button
               color="inherit"
               onClick={() => {
-                onLogout();
+                logout();
                 navigate("/login", { replace: true });
               }}
             >
-              Cerrar sesión
+              Cerrar Sesión
             </Button>
           )}
         </Toolbar>
@@ -160,3 +160,4 @@ function App() {
 }
 
 export default App;
+
