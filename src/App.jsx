@@ -55,7 +55,7 @@ function AppShell({ routes }) {
       <AppBar position="fixed" elevation={0}>
         <Toolbar>
           <Typography variant="h6" component="div">
-            Motorama v1.0.1
+            Motorama v1.0.2
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
           {isAuthenticated && canGoBack && (
