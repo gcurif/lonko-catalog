@@ -8,6 +8,7 @@ export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
 
   const login = (userData) => {
+    console.log('set userData:', userData);
     const { user, token } = userData;
     localStorage.setItem("token", token);
     axiosClient.defaults.headers["Authorization"] = `Bearer ${token}`;

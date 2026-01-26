@@ -26,6 +26,7 @@ function LoginPage() {
 
     try {
       const data = await loginUser(username, password);
+      console.log("Login successful:", data);
       login(data);
       navigate(from, { replace: true });
     } catch (err) {

@@ -33,6 +33,9 @@ function AppShell({ routes }) {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useUser();
 
+  console.log("User:", user);
+  console.log("Is Authenticated:", isAuthenticated);  
+
   const isLoginRoute = location.pathname === "/login";
   const canGoBack = location.pathname !== "/" && !isLoginRoute;
   const isAdmin = user?.roles?.includes("ADMIN");

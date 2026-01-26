@@ -49,6 +49,7 @@ function Add() {
   }
 
   function renderField(field, index) {
+    
     const { type, name, label, options = [] } = field || {};
     const key = name || `campo-${index}`;
     const fieldLabel = label || name || `Campo ${index + 1}`;
@@ -70,7 +71,9 @@ function Add() {
           onChange={handleSelectChange(key)}
           error={Boolean(errors[key])}
           helperText={errors[key]}
-          required
+          required={
+            !field.ignoreInDropbox && !field.filtereable
+          }
         />
       );
     }
@@ -91,7 +94,9 @@ function Add() {
         minRows={isTextArea ? 3 : undefined}
         error={Boolean(errors[key])}
         helperText={errors[key]}
-        required
+        required={
+          !field.ignoreInDropbox && field.filterable
+        }
       />
     );
   }
@@ -153,9 +158,15 @@ function Add() {
     }
 
     sortedSchema.forEach((field) => {
+
+      if(field.ignoreInDropbox || !field.filterable){
+        return;
+      }
+
       const key = field?.name || field?.label;
       if (!key) return;
       const value = form[key];
+
       const isStringEmpty = typeof value === "string" && value.trim() === "";
       const isEmpty = value === "" || value === null || value === undefined || isStringEmpty;
       if (isEmpty) {
