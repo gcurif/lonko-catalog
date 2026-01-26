@@ -35,7 +35,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMxM0IzMzBBRTkxMDYzMkEKUldRcVl4RHBDak03d1JFL2s4dXl6MC9Zb3JoK2hvdzVxMnZ4TER6M2RjSEh6dlBneEJ3SXd6dEgK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJBMjgzOTM2OTU2QzcyMTcKUldRWGNteVZOamtvS29EWktZaDM1cldPNiszbno2ZGNFZVR3R0pBMW1JaW1LdWRnamdubVQzd28K",
       "endpoints": [
         "https://lonko-back.gustavo-curif.workers.dev/version"
       ],     
