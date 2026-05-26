@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -6,6 +6,7 @@ import {
   Container,
   Dialog,
   IconButton,
+  CircularProgress,
   Grid,
   Paper,
   Stack,
@@ -13,56 +14,65 @@ import {
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CloseIcon from "@mui/icons-material/Close";
-import detail1 from "../../assets/images/detail/1.jpeg";
-import detail2 from "../../assets/images/detail/2.jpeg";
-import detail3 from "../../assets/images/detail/3.jpeg";
-import detail4 from "../../assets/images/detail/4.jpeg";
-import detail5 from "../../assets/images/detail/5.jpeg";
-import detail6 from "../../assets/images/detail/6.jpeg";
-import detail7 from "../../assets/images/detail/7.jpeg";
-import detail8 from "../../assets/images/detail/8.jpeg";
+import { listItemImages } from "../../services/items";
 
 function Gallery() {
   const navigate = useNavigate();
   const location = useLocation();
   const item = location.state?.item || location.state?.result;
+  const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [isLoadingImages, setIsLoadingImages] = useState(false);
+  const [imagesError, setImagesError] = useState("");
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, []);
 
-  const images = useMemo(
-    () => {
-      const fallbackImages = [
-        { src: detail1, alt: "Detalle 1" },
-        { src: detail2, alt: "Detalle 2" },
-        { src: detail3, alt: "Detalle 3" },
-        { src: detail4, alt: "Detalle 4" },
-        { src: detail5, alt: "Detalle 5" },
-        { src: detail6, alt: "Detalle 6" },
-        { src: detail7, alt: "Detalle 7" },
-        { src: detail8, alt: "Detalle 8" },
-      ];
+  useEffect(() => {
+    let isMounted = true;
 
-      if (item?.imgs?.length) {
-        const fromItem = item.imgs
+    async function loadImages() {
+      if (!item?.id) {
+        setImages([]);
+        setImagesError("No se pudo identificar el repuesto para cargar imágenes.");
+        return;
+      }
+
+      setIsLoadingImages(true);
+      setImagesError("");
+
+      try {
+        const data = await listItemImages(item.id);
+        if (!isMounted) return;
+
+        const nextImages = (Array.isArray(data) ? data : [])
           .map((img, index) => ({
             src: img.publicUrl || img.url,
             alt: `${item.name || "Detalle"} ${index + 1}`,
           }))
           .filter((img) => Boolean(img.src));
 
-        if (fromItem.length) {
-          return fromItem;
+        setImages(nextImages);
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Error al cargar imágenes", error);
+        setImages([]);
+        setImagesError("No se pudieron cargar las imágenes del repuesto.");
+      } finally {
+        if (isMounted) {
+          setIsLoadingImages(false);
         }
       }
+    }
 
-      return fallbackImages;
-    },
-    [item]
-  );
+    loadImages();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [item?.id, item?.name]);
 
   function handleOpenImage(image) {
     setSelectedImage(image);
@@ -104,24 +114,41 @@ function Gallery() {
             Código: {item?.code || "N/D"}
           </Typography>
 
-          <Grid container spacing={2}>
-            {images.map((image) => (
-              <Grid item xs={12} sm={6} key={image.alt}>
-                <Box
-                  component="img"
-                  src={image.src}
-                  alt={image.alt}
-                  sx={{
-                    width: "100%",
-                    borderRadius: 2,
-                    objectFit: "cover",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => handleOpenImage(image)}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          {isLoadingImages ? (
+            <Stack alignItems="center" spacing={2} sx={{ py: 6 }}>
+              <CircularProgress />
+              <Typography variant="body2" color="text.secondary">
+                Cargando imágenes...
+              </Typography>
+            </Stack>
+          ) : imagesError ? (
+            <Typography variant="body2" color="error.main">
+              {imagesError}
+            </Typography>
+          ) : images.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              Este repuesto no tiene imágenes cargadas.
+            </Typography>
+          ) : (
+            <Grid container spacing={2}>
+              {images.map((image) => (
+                <Grid item xs={12} sm={6} key={image.alt}>
+                  <Box
+                    component="img"
+                    src={image.src}
+                    alt={image.alt}
+                    sx={{
+                      width: "100%",
+                      borderRadius: 2,
+                      objectFit: "cover",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => handleOpenImage(image)}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          )}
         </Stack>
       </Paper>
 

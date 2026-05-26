@@ -15,6 +15,12 @@ export async function createItem(payload) {
   return data;
 }
 
+export async function listItemImages(itemId) {
+  if (!itemId) return [];
+  const { data } = await axiosClient.get(`/items/${itemId}/images`);
+  return data;
+}
+
 export async function uploadItemImages(itemId, images = []) {
   if (!itemId || !Array.isArray(images) || images.length === 0) return null;
   const formData = new FormData();
@@ -34,6 +40,7 @@ export default {
   listItems,
   getItem,
   createItem,
+  listItemImages,
   uploadItemImages,
   advancedSearch,
 };
